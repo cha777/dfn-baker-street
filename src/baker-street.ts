@@ -22,6 +22,12 @@ export class BakerStreet extends EventEmitter {
     });
 
     this.page = await this.browser.newPage();
+    this.page.on('console', (msg) => {
+      const msgType = msg.type();
+      const logType = msgType === 'error' ? 'error' : msgType === 'warn' ? 'warn' : 'log';
+
+      console[logType](`[PAGE LOG]: ${msg.text()}`);
+    });
 
     console.log('Navigating to login page');
     await this.page.goto(this.url);
@@ -65,7 +71,7 @@ export class BakerStreet extends EventEmitter {
 
   public async placeOrder(owner: OrderOwner, foodType: FoodType) {
     if (this.page) {
-      await this.selectOwner(owner);
+      // await this.selectOwner(owner);
       await this.selectFoodType(foodType);
       await this.page.click('#cphContent_CafeFoodOrderUC_btnSave');
 
@@ -78,62 +84,73 @@ export class BakerStreet extends EventEmitter {
   }
 
   private async selectOwner(owner: OrderOwner) {
-    await this.page?.evaluate(async () => {
-      const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddOrderFor') as HTMLSelectElement;
+    await this.page?.evaluate(
+      async ([owner, isColleagueOrder]) => {
+        console.log(`Selecting owner: ${owner.toString()}`);
 
-      if (dropdown) {
-        const options = Array.from(dropdown.options);
+        const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddOrderFor') as HTMLSelectElement;
 
-        // Find the matching order for option and select it
-        const optionToSelect = options.find((option) => option.text === owner.toString());
+        if (dropdown) {
+          const options = Array.from(dropdown.options);
 
-        if (optionToSelect) {
-          dropdown.value = optionToSelect.value;
-          dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+          // Find the matching order for option and select it
+          const optionToSelect = options.find((option) => option.value === owner.toString());
 
-          if (owner === OrderOwner.Colleague) {
-            await this.page?.waitForSelector('#cphContent_CafeFoodOrderUC_ddColleague', { visible: true });
-            const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddColleague') as HTMLSelectElement;
-            const options = Array.from(dropdown.options);
+          if (optionToSelect) {
+            dropdown.value = optionToSelect.value;
+            dropdown.dispatchEvent(new Event('change', { bubbles: true }));
 
-            const optionToSelect = options.find((option) => option.text === owner.toString());
+            if (isColleagueOrder) {
+              await this.page?.waitForSelector('#cphContent_CafeFoodOrderUC_ddColleague', { visible: true });
+              const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddColleague') as HTMLSelectElement;
+              const options = Array.from(dropdown.options);
 
-            if (optionToSelect) {
-              dropdown.value = optionToSelect.value;
-              dropdown.dispatchEvent(new Event('change', { bubbles: true }));
-            } else {
-              throw new Error(`Colleague not available: ${owner}`);
+              // TODO: Implement colleague name selection
+              const optionToSelect = options.find((option) => option.text === owner.toString());
+
+              if (optionToSelect) {
+                dropdown.value = optionToSelect.value;
+                dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+              } else {
+                throw new Error(`Colleague not available: ${owner}`);
+              }
             }
+          } else {
+            throw new Error(`Invalid owner type ${owner.toString()}`);
           }
         } else {
-          throw new Error(`Invalid owner type ${owner.toString()}`);
+          throw new Error('Owner dropdown not available');
         }
-      } else {
-        throw new Error('Owner dropdown not available');
-      }
-    });
+      },
+      [owner, owner === OrderOwner.Colleague]
+    );
   }
 
   private async selectFoodType(foodType: FoodType) {
-    await this.page?.evaluate(() => {
-      const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddFoodType') as HTMLSelectElement;
+    await this.page?.evaluate(
+      ([foodType]) => {
+        console.log(`Selecting food type: ${foodType.toString()}`);
 
-      if (dropdown) {
-        const options = Array.from(dropdown.options);
+        const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddFoodType') as HTMLSelectElement;
 
-        // Find the option with the text "Chicken" and select it
-        const optionToSelect = options.find((option) => option.text === foodType.toString());
+        if (dropdown) {
+          const options = Array.from(dropdown.options);
 
-        if (optionToSelect) {
-          dropdown.value = optionToSelect.value;
-          // Trigger change event manually since Puppeteer doesn't trigger it automatically
-          dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+          // Find the option with the text "Chicken" and select it
+          const optionToSelect = options.find((option) => option.text === foodType.toString());
+
+          if (optionToSelect) {
+            dropdown.value = optionToSelect.value;
+            // Trigger change event manually since Puppeteer doesn't trigger it automatically
+            dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            throw new Error(`Invalid food type ${foodType.toString()}`);
+          }
         } else {
-          throw new Error(`Invalid food type ${foodType.toString()}`);
+          throw new Error('Food type dropdown not available');
         }
-      } else {
-        throw new Error('Food type dropdown not available');
-      }
-    });
+      },
+      [foodType]
+    );
   }
 }
