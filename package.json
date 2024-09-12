@@ -1,10 +1,14 @@
 {
   "name": "dfn-baker-street",
+  "version": "1.0.0",
   "module": "src/index.ts",
   "author": "cha777 (chathuranga_wm@yahoo.com)",
+  "scripts": {
+    "start": "bun .",
+    "build": "bun scripts/build.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/cronitor": "^2.3.0",
     "@types/node-cron": "^3.0.11"
   },
   "peerDependencies": {
@@ -12,7 +16,6 @@
   },
   "type": "module",
   "dependencies": {
-    "cronitor": "^2.4.1",
     "node-cron": "^3.0.3",
     "puppeteer-core": "^23.3.0"
   }

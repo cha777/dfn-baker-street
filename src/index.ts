@@ -1,18 +1,21 @@
 import cron from 'node-cron';
-import { Cronitor } from 'cronitor';
 import { BakerStreet } from './baker-street';
+import { FoodType, OrderOwner } from './constants';
 
-const cronExpression = '*/1 * * * *';
-// const cronExpression = '30 4 * * 3-5';
+console.log('Initialized');
+
+const cronExpression = Bun.env.CRON_EXPRESSION;
 
 const execute = async () => {
+  console.log('Executing cron job');
+
   const job = new BakerStreet();
   await job.initializePage();
 
   if (await job.isOrdersPlaceable()) {
-    console.log('ready');
+    job.placeOrder(OrderOwner.MySelf, FoodType.Fish);
   } else {
-    console.log('try tomorrow');
+    console.error('Baker street service not available');
   }
 
   job.terminate();

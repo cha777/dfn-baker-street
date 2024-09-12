@@ -11,14 +11,15 @@ export class BakerStreet extends EventEmitter {
   constructor() {
     super();
 
-    this.url = 'https://brainxhr.com/private/task/cafe-order-food';
-    this.executablePath = '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser';
+    this.url = Bun.env.BRAINX_URL;
+    this.executablePath = Bun.env.BROWSER_EXEC_PATH;
   }
 
   public async initializePage() {
     this.browser = await puppeteer.launch({
       executablePath: this.executablePath,
       headless: true,
+      args: ['--no-sandbox'],
     });
 
     this.page = await this.browser.newPage();
@@ -80,6 +81,7 @@ export class BakerStreet extends EventEmitter {
   }
 
   public async terminate() {
+    console.log('Terminating browser');
     await this.browser?.close();
   }
 
