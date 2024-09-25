@@ -42,9 +42,5 @@ node_modules/
 .idea
 .vscode
 
-# Scripts
-
-scripts
-
 # Finder (MacOS) folder config
 .DS_Store
