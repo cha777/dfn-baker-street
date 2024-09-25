@@ -145,6 +145,7 @@ export class BakerStreet extends EventEmitter {
             dropdown.value = optionToSelect.value;
             // Trigger change event manually since Puppeteer doesn't trigger it automatically
             dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log('Food type selection successful');
           } else {
             throw new Error(`Invalid food type ${foodType.toString()}`);
           }

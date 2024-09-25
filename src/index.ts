@@ -13,7 +13,7 @@ const execute = async () => {
   await job.initializePage();
 
   if (await job.isOrdersPlaceable()) {
-    job.placeOrder(OrderOwner.MySelf, FoodType.Fish);
+    await job.placeOrder(OrderOwner.MySelf, FoodType.Chicken);
   } else {
     console.error('Baker street service not available');
   }
