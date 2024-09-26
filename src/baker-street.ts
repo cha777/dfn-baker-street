@@ -1,6 +1,6 @@
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { EventEmitter } from 'node:events';
-import { OrderOwner, type FoodType } from './constants';
+import { OrderOwner } from './constants';
 
 export class BakerStreet extends EventEmitter {
   url: string;
@@ -70,7 +70,7 @@ export class BakerStreet extends EventEmitter {
     }
   }
 
-  public async placeOrder(owner: OrderOwner, foodType: FoodType) {
+  public async placeOrder(owner: OrderOwner, foodType: string) {
     if (this.page) {
       // await this.selectOwner(owner);
       await this.selectFoodType(foodType);
@@ -128,10 +128,10 @@ export class BakerStreet extends EventEmitter {
     );
   }
 
-  private async selectFoodType(foodType: FoodType) {
+  private async selectFoodType(foodType: string) {
     await this.page?.evaluate(
       ([foodType]) => {
-        console.log(`Selecting food type: ${foodType.toString()}`);
+        console.log(`Selecting food type: ${foodType}`);
 
         const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddFoodType') as HTMLSelectElement;
 
@@ -139,7 +139,7 @@ export class BakerStreet extends EventEmitter {
           const options = Array.from(dropdown.options);
 
           // Find the option with the text "Chicken" and select it
-          const optionToSelect = options.find((option) => option.text === foodType.toString());
+          const optionToSelect = options.find((option) => option.text === foodType);
 
           if (optionToSelect) {
             dropdown.value = optionToSelect.value;
@@ -147,7 +147,7 @@ export class BakerStreet extends EventEmitter {
             dropdown.dispatchEvent(new Event('change', { bubbles: true }));
             console.log('Food type selection successful');
           } else {
-            throw new Error(`Invalid food type ${foodType.toString()}`);
+            throw new Error(`Invalid food type ${foodType}`);
           }
         } else {
           throw new Error('Food type dropdown not available');

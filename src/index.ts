@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { BakerStreet } from './baker-street';
-import { FoodType, OrderOwner } from './constants';
+import { OrderOwner } from './constants';
 
 console.log('Initialized');
 
@@ -13,7 +13,7 @@ const execute = async () => {
   await job.initializePage();
 
   if (await job.isOrdersPlaceable()) {
-    await job.placeOrder(OrderOwner.MySelf, FoodType.Chicken);
+    await job.placeOrder(OrderOwner.MySelf, Bun.env.FOOD_TYPE);
   } else {
     console.error('Baker street service not available');
   }

@@ -6,6 +6,8 @@ declare module 'bun' {
     BRAINX_USERNAME: string;
     BRAINX_PASSWORD: string;
 
+    FOOD_TYPE: string;
+
     CRON_EXPRESSION: string;
   }
 }
