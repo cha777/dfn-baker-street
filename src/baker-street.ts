@@ -89,6 +89,12 @@ export class BakerStreet extends EventEmitter {
       await this.selectFoodType(foodType);
       await this.page.click(Selector.OrderSaveButton);
 
+      await this.page.waitForFunction(
+        (selector) => (document.querySelector(selector as string) as HTMLSelectElement).value === '0',
+        {},
+        Selector.FoodTypeSelection
+      );
+
       logger.info('Form submitted successfully!');
     }
   }
