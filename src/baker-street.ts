@@ -1,6 +1,6 @@
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { EventEmitter } from 'node:events';
-import { OrderOwner } from './constants';
+import { OrderOwner, Selector } from './constants';
 import logger from './logger';
 
 export class BakerStreet extends EventEmitter {
@@ -49,23 +49,23 @@ export class BakerStreet extends EventEmitter {
     logger.info('Waiting for login page');
 
     await Promise.all([
-      this.page.waitForSelector('#txtiSignInEmail'),
-      this.page.waitForSelector('#txtiSignInPassword'),
-      this.page.waitForSelector('#btnLogin'),
+      this.page.waitForSelector(Selector.EmailInput),
+      this.page.waitForSelector(Selector.PasswordInput),
+      this.page.waitForSelector(Selector.LoginButton),
     ]);
 
     await this.page.waitForNetworkIdle();
 
     logger.info('Login page ready');
 
-    await this.page.type('#txtiSignInEmail', Bun.env.BRAINX_USERNAME);
-    await this.page.type('#txtiSignInPassword', Bun.env.BRAINX_PASSWORD);
-    await this.page.click('#btnLogin');
+    await this.page.type(Selector.EmailInput, Bun.env.BRAINX_USERNAME);
+    await this.page.type(Selector.PasswordInput, Bun.env.BRAINX_PASSWORD);
+    await this.page.click(Selector.LoginButton);
 
     logger.info('Waiting for login in');
 
-    await this.page?.waitForSelector('#cphContent_CafeFoodOrderUC_ddOrderFor', { visible: true });
-    await this.page.waitForSelector('#cphContent_CafeFoodOrderUC_ddFoodType', { visible: true });
+    await this.page?.waitForSelector(Selector.OrderOwnerSelection, { visible: true });
+    await this.page.waitForSelector(Selector.FoodTypeSelection, { visible: true });
 
     await this.page.waitForNetworkIdle({ timeout: 60000 });
 
@@ -74,7 +74,7 @@ export class BakerStreet extends EventEmitter {
 
   public async isOrdersPlaceable() {
     try {
-      const element = await this.page?.$$('#cphContent_CafeFoodOrderUC_btnSave');
+      const element = await this.page?.$$(Selector.OrderSaveButton);
       if (element && element.length > 0) {
         return true;
       }
@@ -87,7 +87,7 @@ export class BakerStreet extends EventEmitter {
     if (this.page) {
       // await this.selectOwner(owner);
       await this.selectFoodType(foodType);
-      await this.page.click('#cphContent_CafeFoodOrderUC_btnSave');
+      await this.page.click(Selector.OrderSaveButton);
 
       logger.info('Form submitted successfully!');
     }
@@ -100,10 +100,10 @@ export class BakerStreet extends EventEmitter {
 
   private async selectOwner(owner: OrderOwner) {
     await this.page?.evaluate(
-      async ([owner, isColleagueOrder]) => {
+      async ([ownerSelector, colleagueSelector, owner, isColleagueOrder]) => {
         console.log(`Selecting owner: ${owner.toString()}`);
 
-        const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddOrderFor') as HTMLSelectElement;
+        const dropdown = document.querySelector(ownerSelector as string) as HTMLSelectElement;
 
         if (dropdown) {
           const options = Array.from(dropdown.options);
@@ -116,8 +116,8 @@ export class BakerStreet extends EventEmitter {
             dropdown.dispatchEvent(new Event('change', { bubbles: true }));
 
             if (isColleagueOrder) {
-              await this.page?.waitForSelector('#cphContent_CafeFoodOrderUC_ddColleague', { visible: true });
-              const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddColleague') as HTMLSelectElement;
+              await this.page?.waitForSelector(colleagueSelector as string, { visible: true });
+              const dropdown = document.querySelector(colleagueSelector as string) as HTMLSelectElement;
               const options = Array.from(dropdown.options);
 
               // TODO: Implement colleague name selection
@@ -137,16 +137,16 @@ export class BakerStreet extends EventEmitter {
           throw new Error('Owner dropdown not available');
         }
       },
-      [owner, owner === OrderOwner.Colleague]
+      [Selector.OrderOwnerSelection, Selector.ColleagueSelection, owner, owner === OrderOwner.Colleague]
     );
   }
 
   private async selectFoodType(foodType: string) {
     await this.page?.evaluate(
-      ([foodType]) => {
+      ([selector, foodType]) => {
         console.log(`Selecting food type: ${foodType}`);
 
-        const dropdown = document.querySelector('#cphContent_CafeFoodOrderUC_ddFoodType') as HTMLSelectElement;
+        const dropdown = document.querySelector(selector) as HTMLSelectElement;
 
         if (dropdown) {
           const options = Array.from(dropdown.options);
@@ -166,7 +166,7 @@ export class BakerStreet extends EventEmitter {
           throw new Error('Food type dropdown not available');
         }
       },
-      [foodType]
+      [Selector.FoodTypeSelection, foodType]
     );
   }
 }
