@@ -1,6 +1,7 @@
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import { EventEmitter } from 'node:events';
 import { OrderOwner } from './constants';
+import logger from './logger';
 
 export class BakerStreet extends EventEmitter {
   url: string;
@@ -25,15 +26,27 @@ export class BakerStreet extends EventEmitter {
     this.page = await this.browser.newPage();
     this.page.on('console', (msg) => {
       const msgType = msg.type();
-      const logType = msgType === 'error' ? 'error' : msgType === 'warn' ? 'warn' : 'log';
+      const loggerMsg = `[PAGE LOG]: ${msg.text()}`;
 
-      console[logType](`[PAGE LOG]: ${msg.text()}`);
+      switch (msgType) {
+        case 'error':
+          logger.error(loggerMsg);
+          break;
+
+        case 'warn':
+          logger.warn(loggerMsg);
+          break;
+
+        default:
+          logger.info(loggerMsg);
+          break;
+      }
     });
 
-    console.log('Navigating to login page');
+    logger.info('Navigating to login page');
     await this.page.goto(this.url);
 
-    console.log('Waiting for login page');
+    logger.info('Waiting for login page');
 
     await Promise.all([
       this.page.waitForSelector('#txtiSignInEmail'),
@@ -43,20 +56,20 @@ export class BakerStreet extends EventEmitter {
 
     await this.page.waitForNetworkIdle();
 
-    console.log('Login page ready');
+    logger.info('Login page ready');
 
     await this.page.type('#txtiSignInEmail', Bun.env.BRAINX_USERNAME);
     await this.page.type('#txtiSignInPassword', Bun.env.BRAINX_PASSWORD);
     await this.page.click('#btnLogin');
 
-    console.log('Waiting for login in');
+    logger.info('Waiting for login in');
 
     await this.page?.waitForSelector('#cphContent_CafeFoodOrderUC_ddOrderFor', { visible: true });
     await this.page.waitForSelector('#cphContent_CafeFoodOrderUC_ddFoodType', { visible: true });
 
-    await this.page.waitForNetworkIdle();
+    await this.page.waitForNetworkIdle({ timeout: 60000 });
 
-    console.log('Baker street loaded');
+    logger.info('Baker street loaded');
   }
 
   public async isOrdersPlaceable() {
@@ -76,12 +89,12 @@ export class BakerStreet extends EventEmitter {
       await this.selectFoodType(foodType);
       await this.page.click('#cphContent_CafeFoodOrderUC_btnSave');
 
-      console.log('Form submitted successfully!');
+      logger.info('Form submitted successfully!');
     }
   }
 
   public async terminate() {
-    console.log('Terminating browser');
+    logger.info('Terminating browser');
     await this.browser?.close();
   }
 

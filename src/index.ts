@@ -1,35 +1,31 @@
 import cron from 'node-cron';
 import { BakerStreet } from './baker-street';
 import { OrderOwner } from './constants';
-
-console.log('Initialized');
+import logger from './logger';
 
 const cronExpression = Bun.env.CRON_EXPRESSION;
 
+logger.info('Initialized');
+logger.info(`Cron expression: ${cronExpression}`);
+
 const execute = async () => {
-  console.log('Executing cron job');
+  logger.info('Executing cron job');
 
   const job = new BakerStreet();
-  await job.initializePage();
 
-  if (await job.isOrdersPlaceable()) {
-    await job.placeOrder(OrderOwner.MySelf, Bun.env.FOOD_TYPE);
-  } else {
-    console.error('Baker street service not available');
+  try {
+    await job.initializePage();
+
+    if (await job.isOrdersPlaceable()) {
+      await job.placeOrder(OrderOwner.MySelf, Bun.env.FOOD_TYPE);
+    } else {
+      logger.error('Baker street service not available');
+    }
+  } catch (e) {
+    logger.error(`Execution failed: ${e}`);
   }
 
   job.terminate();
 };
 
-// const cronitor = new Cronitor(Bun.env.CRONITOR_KEY);
-// cronitor.wraps(cron);
-// cronitor.schedule('BakerStreet Order', cronExpression, execute);
-
 cron.schedule(cronExpression, execute);
-
-// const monitor = await cronitor.Monitor.put({
-//   type: 'job',
-//   key: 'important-background-job',
-//   schedule: '0 0 * * *',
-//   notify: ['slack:devops-alerts'],
-// });
