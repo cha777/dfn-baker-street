@@ -15,5 +15,8 @@ declare module 'bun' {
     EMAIL_TRANSPORT_EMAIL_SENDER: string;
     EMAIL_TRANSPORT_EMAIL_PASSWORD: string;
     EMAIL_TRANSPORT_EMAIL_TO: string;
+
+    TELEGRAM_BOT_TOKEN: string;
+    TELEGRAM_BOT_CHANNEL_ID: string;
   }
 }

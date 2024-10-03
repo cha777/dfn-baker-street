@@ -1,6 +1,6 @@
 import cron from 'node-cron';
-import nodemailer from 'nodemailer';
 import { BakerStreet } from './baker-street';
+import notificationProvider from './notification-providers';
 import { OrderOwner } from './constants';
 import logger from './logger';
 
@@ -10,34 +10,6 @@ const maxRetries = parseInt(Bun.env.MAX_RETRY_ATTEMPTS, 10) || 3;
 logger.info('Initialized');
 logger.info(`Cron expression: ${cronExpression}`);
 logger.info(`Max retry attempts: ${maxRetries}`);
-
-const transporter = nodemailer.createTransport({
-  host: Bun.env.EMAIL_TRANSPORT_EMAIL_HOST,
-  port: 465,
-  secure: true,
-  auth: {
-    user: Bun.env.EMAIL_TRANSPORT_EMAIL_SENDER,
-    pass: Bun.env.EMAIL_TRANSPORT_EMAIL_PASSWORD,
-  },
-});
-
-const sendMail = async (isSuccessful: boolean, error?: Error) => {
-  let mailOptions = {
-    from: Bun.env.EMAIL_TRANSPORT_EMAIL_SENDER,
-    to: Bun.env.EMAIL_TRANSPORT_EMAIL_TO,
-    subject: `DFN Baker Street Order (${new Date().toISOString().split('T').shift()}) - ${
-      isSuccessful ? 'Successful' : 'Failed'
-    }`,
-    text: `${isSuccessful ? `Order Placed for ${Bun.env.FOOD_TYPE}` : `Order Failed: ${error?.message}`}`,
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    logger.info('Email sent');
-  } catch (e) {
-    logger.error(`Email send failed: ${e}`);
-  }
-};
 
 const execute = async () => {
   logger.info('Executing cron job');
@@ -68,7 +40,7 @@ const execute = async () => {
     }
   }
 
-  sendMail(isSuccessful, error);
+  notificationProvider.sendNotification(isSuccessful, attempt, error);
   job.terminate();
 };
 
