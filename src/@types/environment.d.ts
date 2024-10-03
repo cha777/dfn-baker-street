@@ -10,5 +10,10 @@ declare module 'bun' {
 
     CRON_EXPRESSION: string;
     MAX_RETRY_ATTEMPTS: string;
+
+    EMAIL_TRANSPORT_EMAIL_HOST: string;
+    EMAIL_TRANSPORT_EMAIL_SENDER: string;
+    EMAIL_TRANSPORT_EMAIL_PASSWORD: string;
+    EMAIL_TRANSPORT_EMAIL_TO: string;
   }
 }
