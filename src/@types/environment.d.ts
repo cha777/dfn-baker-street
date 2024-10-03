@@ -9,5 +9,6 @@ declare module 'bun' {
     FOOD_TYPE: string;
 
     CRON_EXPRESSION: string;
+    MAX_RETRY_ATTEMPTS: string;
   }
 }
