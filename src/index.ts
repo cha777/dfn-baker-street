@@ -3,6 +3,7 @@ import { BakerStreet } from './baker-street';
 import notificationProvider from './notification-providers';
 import { OrderOwner } from './constants';
 import logger from './logger';
+import './command-handler';
 
 const cronExpression = Bun.env.CRON_EXPRESSION;
 const maxRetries = parseInt(Bun.env.MAX_RETRY_ATTEMPTS, 10) || 3;
@@ -44,4 +45,4 @@ const execute = async () => {
   job.terminate();
 };
 
-cron.schedule(cronExpression, execute);
+// cron.schedule(cronExpression, execute);
